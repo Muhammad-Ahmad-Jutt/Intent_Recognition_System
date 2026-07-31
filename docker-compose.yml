@@ -1,0 +1,14 @@
+services:
+  intent_recognition:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - intent_recognition_vol:/usr/local/app/src/data
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+
+volumes:
+  intent_recognition_vol:

@@ -62,8 +62,8 @@ if __name__ == "__main__":
     learning_rate = float(os.getenv("learning_rate"))
     logging_strategy = os.getenv("logging_strategy")
     metric_for_best_model = os.getenv("metric_for_best_model")
-    current_model_path = os.getenv("current_model_path")
-    new_model_path = os.getenv("new_model_path")
+    symlink_path = os.getenv("symlinkpath")
+    model_out_directory = os.getenv("model_out_directory")
     greater_is_better = os.getenv("greater_is_better") == "True"
     metrics_output_file = os.getenv("metrics_output_file")
     hf_api_token = os.getenv("HF_TOKEN")
@@ -74,10 +74,11 @@ if __name__ == "__main__":
     symlink_obj = symlink_manager()
     current_dir = symlink_manager.get_current_path()
     dataset_path = symlink_manager.join_path(current_dir, dataset_path)
-    current_model_path = symlink_manager.join_path(current_dir, current_model_path)
-    symlink_manager.exist_or_create(current_model_path)
-    new_model_path = symlink_manager.join_path(current_dir, new_model_path)
-    symlink_manager.exist_or_create(new_model_path)
+    print(current_dir, symlink_path)
+    symlink_path = symlink_manager.join_path(current_dir, symlink_path)
+    symlink_manager.exist_or_create(symlink_path)
+    model_out_directory = symlink_manager.join_path(current_dir, model_out_directory)
+    symlink_manager.exist_or_create(model_out_directory)
     label_mapping_file_path = symlink_manager.join_path(current_dir, label_mapping_file_path)
     accuracy_comparison_file = symlink_manager.join_path(current_dir, accuracy_comparison_file)
     accuracy_comparison_file = symlink_manager.check_if_file_exist_or_create(accuracy_comparison_file)
@@ -106,22 +107,25 @@ if __name__ == "__main__":
             learning_rate=learning_rate,
             logging_strategy=logging_strategy,
             metric_for_best_model=metric_for_best_model,
-            current_model_path=current_model_path,
-            new_model_path=new_model_path,
+            model_out_directory=model_out_directory,
+            symlink_path=symlink_path,
             greater_is_better=greater_is_better,
             metrics_output_file=metrics_output_file,
             hf_api_token=hf_api_token,
             label_mapping_file_path=label_mapping_file_path
         )
         result, model_dir = trainer.train_command(args.train_or_fine_tune)
+        print('model trained successfull ')
+        symlink_manager.create_symlink_symlink(current_dir,model_dir)
         # it must return the current path of new model
     elif args.train_or_fine_tune == 'test':
         unseen_data_obj = UnseenDataTests()
-        acc_percentage = unseen_data_obj.main(unseen_data_path, current_model_path)
-        decision,model_dir = unseen_data_obj.read_and_decide(accuracy_comparison_file, acc_percentage, current_model_path)
+        acc_percentage = unseen_data_obj.main(unseen_data_path, symlink_path)
+        decision,model_dir = unseen_data_obj.read_and_decide(accuracy_comparison_file, acc_percentage, symlink_path)
         if decision==True:
             print('dicision is true')
             symlink_manager.create_symlink_symlink(current_dir,model_dir)
         else:
             print('dicstion is false')
+            sys.exit(1)
         

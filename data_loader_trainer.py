@@ -24,14 +24,14 @@ class DataLoaderTrainer:
     def __init__(self, model_name, dataset_path, test_size, random_state,num_train_epochs, per_device_train_batch_size,
                  per_device_eval_batch_size, weight_decay, eval_strategy, save_strategy, load_best_model_at_end,
                  logging_steps, learning_rate, 
-                 logging_strategy, metric_for_best_model, current_model_path,new_model_path
+                 logging_strategy, metric_for_best_model, symlink_path,model_out_directory
                  , greater_is_better, metrics_output_file, hf_api_token, label_mapping_file_path):
         self.model_name = model_name
         self.dataset_path = dataset_path
         self.test_size = test_size
         self.random_state = random_state
-        self.current_model_path = current_model_path
-        self.new_model_path = new_model_path
+        self.symlink_path = symlink_path
+        self.model_out_directory = model_out_directory
         self.num_train_epochs = num_train_epochs
         self.per_device_train_batch_size = per_device_train_batch_size
         self.per_device_eval_batch_size = per_device_eval_batch_size
@@ -58,17 +58,17 @@ class DataLoaderTrainer:
         
             self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name, num_labels=len(label2id), id2label=id2label, label2id=label2id)
             train_dataset, test_dataset = self.preprocess_datasets()
-            results = self.train_model(train_dataset, test_dataset, self.current_model_path)
+            results = self.train_model(train_dataset, test_dataset, self.model_out_directory)
             return results
         elif train_command == "fine-tune":
             print("You have chosen to fine-tune the model on your dataset.")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.new_model_path,id2label=id2label, label2id=label2id)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.symlink_path,id2label=id2label, label2id=label2id)
 
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                self.new_model_path
+                self.symlink_path
             )
             train_dataset, test_dataset = self.preprocess_datasets()
-            results = self.train_model(train_dataset, test_dataset, self.new_model_path)
+            results = self.train_model(train_dataset, test_dataset, self.model_out_directory)
             return results
         else:
             raise ValueError("Please provide a valid argument: 'train' or 'fine-tune'")
