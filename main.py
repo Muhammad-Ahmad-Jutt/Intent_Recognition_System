@@ -6,7 +6,20 @@ import sys
 from data_loader_trainer import DataLoaderTrainer
 from unseen_data import UnseenDataTests
 from pathlib import Path
+class dataset_operations:
+    """
+    This class can be further used by the pipline of traing the new data combining with the old data
+    """
+    def __init__(self, dataset_path, new_dataset_folder):
+        self.dataset_path = dataset_path
+        self.newdataset_folder = new_dataset_folder
 
+    def clean_data(self):
+        pass
+    def read_all_new_files(self):
+        pass
+    def combine_merge_file(self):
+        pass
 class symlink_manager:
     def exist_or_create(dir):
         dir = Path(dir)
@@ -49,6 +62,7 @@ if __name__ == "__main__":
     model_dir = None
     model_name = os.getenv("MODEL_NAME")
     dataset_path = os.getenv("dataset_path")
+    new_dataset_folder = os.getenv("new_dataset_folder")
     test_size = float(os.getenv("test_size"))
     random_state = int(os.getenv("random_state"))
     num_train_epochs = int(os.getenv("num_train_epochs"))
@@ -74,7 +88,7 @@ if __name__ == "__main__":
     symlink_obj = symlink_manager()
     current_dir = symlink_manager.get_current_path()
     dataset_path = symlink_manager.join_path(current_dir, dataset_path)
-    print(current_dir, symlink_path)
+    new_dataset_folder = symlink_manager.join_path(current_dir, new_dataset_folder)
     symlink_path = symlink_manager.join_path(current_dir, symlink_path)
     symlink_manager.exist_or_create(symlink_path)
     model_out_directory = symlink_manager.join_path(current_dir, model_out_directory)
@@ -86,7 +100,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("train_or_fine_tune")
     parser.add_argument("train_or_fine_tune", help="Just write 'train' or 'fine-tune' as your requirement", type=str)
     args = parser.parse_args()
-    print("You have provided the argument:", args.train_or_fine_tune)
+
     if args.train_or_fine_tune not in ["train", "fine-tune", "test"]:
         print("Please provide a valid argument: 'train' or 'fine-tune'")
         sys.exit(1)
@@ -117,6 +131,9 @@ if __name__ == "__main__":
         result, model_dir = trainer.train_command(args.train_or_fine_tune)
         print('model trained successfull ')
         symlink_manager.create_symlink_symlink(current_dir,model_dir)
+        # the fine tuning does not test the model on the external evaluation data so at the moment it just replace the new model
+
+
         # it must return the current path of new model
     elif args.train_or_fine_tune == 'test':
         unseen_data_obj = UnseenDataTests()
