@@ -1,6 +1,8 @@
 services:
   intent_recognition:
     build: .
+    image: intent_recognition_img
+    container_name: intent_recognition_container
     ports:
       - "5000:5000"
     volumes:

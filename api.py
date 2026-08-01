@@ -9,7 +9,6 @@ app = Flask(__name__)
 current = Path(__file__).resolve().parent
 
 model_path = current / "current_model"
-print(model_path)
 if not model_path.exists():
     raise FileNotFoundError(
         f"Model not found: {model_path}"

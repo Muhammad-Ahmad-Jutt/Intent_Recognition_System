@@ -1,37 +1,55 @@
 #!/bin/bash
+set -e
 
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+MODEL_PATH="$CURRENT_DIR/${symlinkpath}"
+ENVIRONMENT="${environment:-development}"
 
-MODEL_PATH="$CURRENT_DIR/$symlinkpath"
+echo "========================================"
+echo "Intent Recognition Startup"
+echo "Environment : $ENVIRONMENT"
+echo "Model Path  : $MODEL_PATH"
+echo "========================================"
 
-echo "Checking model: $MODEL_PATH"
+# ----------------------------
+# Production Mode
+# ----------------------------
+if [ "$ENVIRONMENT" = "production" ]; then
+    echo "Production environment detected."
+    echo "Starting API..."
 
+    exec python -u api.py
+fi
+
+# ----------------------------
+# Development Mode
+# ----------------------------
+echo "Development environment detected."
 
 if [ -L "$MODEL_PATH" ] && [ -e "$MODEL_PATH" ]; then
-    echo "Model exists"
+    echo "Existing model found."
     echo "Starting fine-tuning..."
 
     python -u main.py fine-tune
-    EXIT_CODE=$?
-
 else
-    echo "Model does not exist"
+    echo "No existing model found."
     echo "Starting initial training..."
 
     python -u main.py train
-    EXIT_CODE=$?
 fi
 
+EXIT_CODE=$?
 
-if [ $EXIT_CODE -eq 0 ]; then
-    echo "Model training successful"
-    echo "Evaluating and sending model to ECR..."
-    python -u api.py
-    # Add your ECR push command here
+if [ "$EXIT_CODE" -eq 0 ]; then
+    echo "========================================"
+    echo "Training completed successfully."
+    echo "========================================"
+    exit 0
 else
-    echo "Model training failed or accuracy is not acceptable"
-    echo "Stopping pipeline"
-
+    echo "========================================"
+    echo "Training failed."
+    echo "Pipeline stopped."
+    echo "========================================"
     exit 1
 fi
