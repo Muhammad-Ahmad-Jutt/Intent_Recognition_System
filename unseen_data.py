@@ -2,7 +2,7 @@ import json
 from transformers import pipeline
 from dotenv import load_dotenv
 import os
-from path import Path
+from pathlib import Path
 load_dotenv()
 
 class UnseenDataTests:
