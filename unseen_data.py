@@ -2,6 +2,7 @@ import json
 from transformers import pipeline
 from dotenv import load_dotenv
 import os
+from path import Path
 load_dotenv()
 
 class UnseenDataTests:
@@ -75,12 +76,19 @@ class UnseenDataTests:
             )
             return True, current_model_path
         return False
-    def write_to_json(self, accuracy_comparison_file, current_acc_percentage, current_model_path):
+    def write_to_json(
+        self,
+        accuracy_comparison_file,
+        current_acc_percentage,
+        current_model_path
+    ):
+
+        model_directory_name = Path(current_model_path).name
 
         json_obj = {
             "current": {
                 "accuracy": current_acc_percentage,
-                "model_path": str(current_model_path)
+                "model_path": model_directory_name
             }
         }
 

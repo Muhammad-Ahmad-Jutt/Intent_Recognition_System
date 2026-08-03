@@ -24,13 +24,13 @@ class DataLoaderTrainer:
     def __init__(self, model_name, dataset_path, test_size, random_state,num_train_epochs, per_device_train_batch_size,
                  per_device_eval_batch_size, weight_decay, eval_strategy, save_strategy, load_best_model_at_end,
                  logging_steps, learning_rate, 
-                 logging_strategy, metric_for_best_model, symlink_path,model_out_directory
+                 logging_strategy, metric_for_best_model, directory_name,model_out_directory
                  , greater_is_better, metrics_output_file, hf_api_token, label_mapping_file_path):
         self.model_name = model_name
         self.dataset_path = dataset_path
         self.test_size = test_size
         self.random_state = random_state
-        self.symlink_path = symlink_path
+        self.directory_name = directory_name
         self.model_out_directory = model_out_directory
         self.num_train_epochs = num_train_epochs
         self.per_device_train_batch_size = per_device_train_batch_size
@@ -62,10 +62,10 @@ class DataLoaderTrainer:
             return results
         elif train_command == "fine-tune":
             print("You have chosen to fine-tune the model on your dataset.")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.symlink_path,id2label=id2label, label2id=label2id)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.directory_name,id2label=id2label, label2id=label2id)
 
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                self.symlink_path
+                self.directory_name
             )
             train_dataset, test_dataset = self.preprocess_datasets()
             results = self.train_model(train_dataset, test_dataset, self.model_out_directory)
