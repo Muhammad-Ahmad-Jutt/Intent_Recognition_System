@@ -76,11 +76,7 @@ if __name__ == "__main__":
     # accuracy_comparison_file = manage_paths.join_path(current_dir, accuracy_comparison_file)
     # accuracy_comparison_file = manage_paths.check_if_file_exist_or_create(accuracy_comparison_file)
     unseen_data_path = manage_paths.join_path(current_dir, unseen_data_path)
-    directory_name = None
-
-
-
-    train_command = 'train'
+    train_command = os.getenv("command")
     model_path = download_latest_model()
     if train_command not in ["train", "fine-tune", "test"]:
         print("Please provide a valid argument: 'train' or 'fine-tune'")
@@ -116,17 +112,15 @@ if __name__ == "__main__":
         aws_s3_obj.upload_folder(model_dir)
         testing_model_on_unseen_data = UnseenDataTests()
         acc_percentage = testing_model_on_unseen_data.main(unseen_data_path, model_dir)
-        testing_model_on_unseen_data.read_and_decide(accuracy_comparison_file, acc_percentage, model_dir)
-        aws_s3_obj.upload_file_to_s3(accuracy_comparison_file)
-        print(f"Training completed. Model saved to {model_dir}. Accuracy: {acc_percentage}%\n accuracy_comparison_file updated and uploaded to S3.")
+        decision = testing_model_on_unseen_data.read_and_decide(accuracy_comparison_file, acc_percentage, model_dir)
+        if decision:
+            aws_s3_obj.upload_file_to_s3(accuracy_comparison_file)
+            print(f"Training completed. Model saved to {model_dir}. Accuracy: {acc_percentage}%\n accuracy_comparison_file updated and uploaded to S3.")
+        else:
+            print(f"Training completed. Model saved to {model_dir}. Accuracy: {acc_percentage}%\n accuracy_comparison_file not updated as the new model's accuracy is lower than the previous one.")
+            sys.exit(1)
+    # elif train_command == "test":
 
-
-
-        # symlink_manager.create_symlink_symlink(current_dir,model_dir)
-        # the fine tuning does not test the model on the external evaluation data so at the moment it just replace the new model
-
-
-    #     # it must return the current path of new model
     # elif args.train_or_fine_tune == 'test':
     #     unseen_data_obj = UnseenDataTests()
     #     acc_percentage = unseen_data_obj.main(unseen_data_path, symlink_path)
