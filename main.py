@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
 
+from download_model import download_latest_model
 from manage_s3_buckets import S3_bucket_crud
 load_dotenv()
 import argparse
@@ -29,7 +30,6 @@ class manage_paths:
         else:
             open(file_path, 'x')
             return file_path
-
 if __name__ == "__main__":
     model_dir = None
     model_name = os.getenv("MODEL_NAME")
@@ -80,18 +80,15 @@ if __name__ == "__main__":
 
 
 
-    parser = argparse.ArgumentParser("train_or_fine_tune")
-    parser.add_argument("train_or_fine_tune", help="Just write 'train' or 'fine-tune' as your requirement", type=str)
-    args = parser.parse_args()
-    
-    if args.train_or_fine_tune not in ["train", "fine-tune", "test"]:
+    train_command = 'train'
+    model_path = download_latest_model()
+    if train_command not in ["train", "fine-tune", "test"]:
         print("Please provide a valid argument: 'train' or 'fine-tune'")
         sys.exit(1)
-    elif args.train_or_fine_tune == "train" or args.train_or_fine_tune == "fine-tune":
-        if args.train_or_fine_tune == "fine-tune":
-            s3_model_path, directory_name, current_accuracy = aws_s3_obj.read_file_from_s3(accuracy_comparison_file, current_dir)
-            #dowloading the model for fine tuning from s3 bucket
-            model_dir = aws_s3_obj.download_model_from_s3(s3_model_path, directory_name)
+    elif train_command == "train" or train_command == "fine-tune":
+        if model_path is not None:
+            print(f"Existing model found at {model_path}. Proceeding with fine-tuning.")
+            train_command = "fine-tune"
         trainer = DataLoaderTrainer(
             model_name=model_name,
             dataset_path=dataset_path,
@@ -109,13 +106,13 @@ if __name__ == "__main__":
             logging_strategy=logging_strategy,
             metric_for_best_model=metric_for_best_model,
             model_out_directory=model_out_directory,
-            directory_name=directory_name,
+            directory_name=model_path,
             greater_is_better=greater_is_better,
             metrics_output_file=metrics_output_file,
             hf_api_token=hf_api_token,
             label_mapping_file_path=label_mapping_file_path
         )
-        result, model_dir = trainer.train_command(args.train_or_fine_tune)
+        result, model_dir = trainer.train_command(train_command)
         aws_s3_obj.upload_folder(model_dir)
         testing_model_on_unseen_data = UnseenDataTests()
         acc_percentage = testing_model_on_unseen_data.main(unseen_data_path, model_dir)

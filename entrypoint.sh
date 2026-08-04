@@ -1,15 +1,11 @@
 #!/bin/bash
 set -e
 
-CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-MODEL_PATH="$CURRENT_DIR/${symlinkpath}"
 ENVIRONMENT="${environment:-development}"
 
 echo "========================================"
 echo "Intent Recognition Startup"
 echo "Environment : $ENVIRONMENT"
-echo "Model Path  : $MODEL_PATH"
 echo "========================================"
 
 # ----------------------------
@@ -34,17 +30,7 @@ fi
 # ----------------------------
 echo "Development environment detected."
 
-if [ -L "$MODEL_PATH" ] && [ -e "$MODEL_PATH" ]; then
-    echo "Existing model found."
-    echo "Starting fine-tuning..."
-
-    python -u main.py fine-tune
-else
-    echo "No existing model found."
-    echo "Starting initial training..."
-
-    python -u main.py train
-fi
+python -u main.py 
 
 EXIT_CODE=$?
 

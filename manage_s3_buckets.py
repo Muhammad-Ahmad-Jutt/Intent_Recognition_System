@@ -200,7 +200,7 @@ class S3_bucket_crud:
             return current_model_path, directory_name, current_accuracy
         except Exception as e:
             print(f"Error reading file from S3: {e}")
-            return None
+            return None, None, None
     def upload_file_to_s3(self, local_file_path, s3_folder_path=None):
         try:
             local_file_path = Path(local_file_path)

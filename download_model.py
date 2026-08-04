@@ -42,10 +42,11 @@ def download_latest_model():
         current_model_dir,
     )
     if tag:
-        print(f"Model downloaded to: {current_model_dir / directory_name}")
+        print(f"Model downloaded to: {current_model_dir}")
+        return current_model_dir
     else:
         print("Failed to download model.")
-
+        return None
 
 if __name__ == "__main__":
     download_latest_model()
