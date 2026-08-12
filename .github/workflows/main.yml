@@ -7,11 +7,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # checkout the code first
+      # 1. Checkout code
       - name: Checkout
-        run: actions/checkout@v4
-      # build the docker image only and tag it with the latest commit
-      - name: build image
+        uses: actions/checkout@v4
+
+      # 2. Build Docker image
+      - name: Build image
         run: docker build -t intent_recognition:${{ github.sha }}
 
         
