@@ -23,7 +23,6 @@ def download_latest_model():
         aws_access_key_id=os.getenv("aws_access_key_id"),
         aws_secret_access_key=os.getenv("aws_secret_access_key"),
         region_name=os.getenv("aws_region_name"),
-        endpoint_url=os.getenv("aws_endpoint_url"),
     )
     current_model_dir = Path(__file__).resolve().parent / "current_model"
 
