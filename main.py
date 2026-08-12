@@ -60,8 +60,7 @@ if __name__ == "__main__":
     aws_access_key_id = os.getenv('aws_access_key_id')
     aws_secret_access_key = os.getenv('aws_secret_access_key')
     aws_region_name = os.getenv('aws_region_name')
-    aws_endpoint_url = os.getenv('aws_endpoint_url')
-    aws_s3_obj = S3_bucket_crud(s3_bucket_name, aws_access_key_id, aws_secret_access_key, aws_region_name, aws_endpoint_url)
+    aws_s3_obj = S3_bucket_crud(s3_bucket_name, aws_access_key_id, aws_secret_access_key, aws_region_name)
     aws_s3_obj.create_bucket_if_not_exists()
     # creating symlinks for dataset, current model_path, new_model_path
     symlink_obj = manage_paths()

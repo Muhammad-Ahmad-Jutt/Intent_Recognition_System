@@ -9,21 +9,18 @@ class S3_bucket_crud:
         aws_access_key_id,
         aws_secret_access_key,
         region_name,
-        endpoint_url=None
     ):
         self.bucket_name = bucket_name
 
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.region_name = region_name
-        self.endpoint_url = endpoint_url
 
         self.s3_client = boto3.client(
             's3',
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.region_name,
-            endpoint_url=self.endpoint_url
         )
 
     def create_bucket_if_not_exists(self):
