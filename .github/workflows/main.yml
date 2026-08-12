@@ -1,0 +1,17 @@
+name: intent-recognition ci/cd
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the code first
+      - name: Checkout
+        run: actions/checkout@v4
+      # build the docker image only and tag it with the latest commit
+      - name: build image
+        run: docker build -t intent_recognition:${{ github.sha }}
+
+        
