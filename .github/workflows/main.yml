@@ -13,6 +13,6 @@ jobs:
 
       # 2. Build Docker image
       - name: Build image
-        run: docker build -t intent_recognition:${{ github.sha }}
+        run: docker build -t intent_recognition:${{ github.sha }} .
 
         
