@@ -7,39 +7,12 @@ services:
       - "5000:5000"
     volumes:
       - intent_recognition_vol:/usr/local/app/src/data
+    env_file: 
+        - /etc/app/app_env.env
+
     environment:
       - PYTHONUNBUFFERED=1
-      - environment
-      - command
-      - HF_TOKEN
-      - MODEL_NAME
-      - dataset_path
-      - new_dataset_folder
-      - test_size
-      - random_state
-      - num_train_epochs
-      - per_device_train_batch_size
-      - per_device_eval_batch_size
-      - weight_decay
-      - eval_strategy
-      - save_strategy
-      - load_best_model_at_end
-      - logging_steps
-      - learning_rate
-      - logging_strategy
-      - metric_for_best_model
-      - greater_is_better
-      - model_out_directory
-      - model_path
-      - metrics_output_file
-      - label_mapping_file_path
-      - accuracy_comparison_file
-      - unseen_data_path
-      - s3_bucket_name
-      - aws_access_key_id
-      - aws_secret_access_key
-      - aws_region_name
-      - aws_endpoint_url
+
 #     networks:
 #       - shared_network
 
