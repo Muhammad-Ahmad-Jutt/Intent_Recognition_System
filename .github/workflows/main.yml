@@ -14,5 +14,46 @@ jobs:
       # 2. Build Docker image
       - name: Build image
         run: docker build -t intent_recognition:${{ github.sha }} .
+      - name: configure Aws Credentials
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: ecr-login
+        id: login-ecr
+        uses: aws-actions/configure-aws-credentials@v6.2.3
 
+      - name: tag ecr image
+        run : | 
+          docker tag \
+          intent_recognition:${{ github.sha }} \
+          ${{ steps.login-ecr.outputs.registry }}/intent-recognition:${{ github.sha }}
+      - name: push image
+        run: |
+          docker tag \
+          intent_recognition:${{ github.sha }} \
+          ${{ steps.login-ecr.outputs.registry }}/intent-recognition:${{ github.sha }}
+      # - name: Find trainer EC2
+      #   id: trainer
+      #   run: |
+      #     INSTANCE_ID=$(aws ec2 describe-instances \
+      #       --filters \
+      #         "Name=tag:Name,Values=trainer" \
+      #         "Name=instance-state-name,Values=running" \
+      #       --query "Reservations[0].Instances[0].InstanceId" \
+      #       --output text)
+      
+      #     INSTANCE_IP=$(aws ec2 describe-instances \
+      #       --filters \
+      #         "Name=tag:Name,Values=trainer" \
+      #         "Name=instance-state-name,Values=running" \
+      #       --query "Reservations[0].Instances[0].PublicIpAddress" \
+      #       --output text)
+      
+      #     echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
+      #     echo "instance_ip=$INSTANCE_IP" >> "$GITHUB_OUTPUT"
+      
+      #     echo "Trainer instance: $INSTANCE_ID"
+      #     echo "Trainer IP: $INSTANCE_IP"
         
