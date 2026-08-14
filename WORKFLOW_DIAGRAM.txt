@@ -1,0 +1,45 @@
+Intent Recognition System Workflow
+
+1. Start
+
+2. main.py loads environment variables
+   - MODEL_NAME
+   - dataset_path
+   - model_out_directory
+   - unseen_data_path
+   - accuracy_comparison_file
+   - S3 credentials
+   - training hyperparameters
+
+3. main.py calls download_latest_model()
+   - If model exists, switch to fine-tune
+
+4. main.py initializes DataLoaderTrainer
+   - loads label mapping
+   - loads tokenizer/model
+   - loads dataset CSV
+   - splits into train/test
+   - preprocesses text
+   - trains model with Trainer
+   - saves model and tokenizer in timestamped folder
+   - saves metrics JSON
+
+5. main.py uploads model folder to S3 via manage_s3_buckets.S3_bucket_crud.upload_folder()
+
+6. main.py evaluates the new model on unseen data via unseen_data.UnseenDataTests
+   - loads unseen_data.json
+   - uses text-classification pipeline on model
+   - compares predicted labels to true labels
+   - computes accuracy percentage
+
+7. main.py compares accuracy to prior best using UnseenDataTests.read_and_decide()
+   - if new accuracy >= previous accuracy, update metrics JSON and upload
+   - else exit with failure
+
+8. Deployment:
+   - api.py loads current_model from local folder
+   - starts Flask service at /intent_recognition
+   - receives POST JSON with "query"
+   - returns predicted intent and confidence
+
+9. End
