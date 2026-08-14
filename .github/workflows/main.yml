@@ -63,33 +63,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - name: Dump OIDC token claims (debug)
-        run: |
-          # request an ID token for audience=aws
-          TOKEN_JSON=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL?audience=aws")
-          ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r .value)
-      
-          # show a truncated token so you know it was fetched (don't print full token in long-lived logs)
-          echo "ID token (truncated): ${ID_TOKEN:0:80}..."
-      
-          # export so python can read it
-          export ID_TOKEN
-      
-          # decode JWT payload (no verification) and pretty-print JSON
-          python3 - <<'PY'
-          import os, json, base64
-          t = os.environ.get('ID_TOKEN','')
-          if not t:
-              print("No ID_TOKEN found")
-          else:
-              try:
-                  payload_b64 = t.split('.')[1]
-                  payload_b64 += '=' * (-len(payload_b64) % 4)
-                  payload = json.loads(base64.urlsafe_b64decode(payload_b64))
-                  print(json.dumps(payload, indent=2))
-              except Exception as e:
-                  print("Failed to decode token:", e)
-          PY
+
 
       # -----------------------------------------------------
       # Verify AWS identity
@@ -151,7 +125,34 @@ jobs:
 # TRAIN MODEL
 # =========================================================
 
-  train:
+train:
+  - name: Dump OIDC token claims (debug)
+    run: |
+      # request an ID token for audience=aws
+      TOKEN_JSON=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL?audience=aws")
+      ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r .value)
+  
+      # show a truncated token so you know it was fetched (don't print full token in long-lived logs)
+      echo "ID token (truncated): ${ID_TOKEN:0:80}..."
+  
+      # export so python can read it
+      export ID_TOKEN
+  
+      # decode JWT payload (no verification) and pretty-print JSON
+      python3 - <<'PY'
+      import os, json, base64
+      t = os.environ.get('ID_TOKEN','')
+      if not t:
+          print("No ID_TOKEN found")
+      else:
+          try:
+              payload_b64 = t.split('.')[1]
+              payload_b64 += '=' * (-len(payload_b64) % 4)
+              payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+              print(json.dumps(payload, indent=2))
+          except Exception as e:
+              print("Failed to decode token:", e)
+      PY
     name: Train Model
     needs: build
 
