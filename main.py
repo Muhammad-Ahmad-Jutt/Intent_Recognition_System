@@ -78,9 +78,9 @@ if __name__ == "__main__":
     train_command = os.getenv("command")
     model_path = download_latest_model()
     if train_command not in ["train", "fine-tune", "test"]:
-        print("Please provide a valid argument: 'train' or 'fine-tune'")
+        print("Please provide a valid argument: 'train' or 'fine-tune' or 'test'")
         sys.exit(1)
-    elif train_command == "train" or train_command == "fine-tune":
+    elif train_command == "train" or train_command == "fine-tune" or train_command == "test":
         if model_path is not None:
             print(f"Existing model found at {model_path}. Proceeding with fine-tuning.")
             train_command = "fine-tune"

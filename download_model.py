@@ -1,4 +1,5 @@
 from pathlib import Path
+from aiohttp import ClientError
 from dotenv import load_dotenv
 import os
 import shutil
