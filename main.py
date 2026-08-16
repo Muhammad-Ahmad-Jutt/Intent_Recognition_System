@@ -112,7 +112,7 @@ if __name__ == "__main__":
         testing_model_on_unseen_data = UnseenDataTests()
         acc_percentage = testing_model_on_unseen_data.main(unseen_data_path, model_dir)
         decision = testing_model_on_unseen_data.read_and_decide(accuracy_comparison_file, acc_percentage, model_dir)
-        if decision:
+        if train_command == "train" or decision:
             aws_s3_obj.upload_file_to_s3(accuracy_comparison_file)
             print(f"Training completed. Model saved to {model_dir}. Accuracy: {acc_percentage}%\n accuracy_comparison_file updated and uploaded to S3.")
         else:
