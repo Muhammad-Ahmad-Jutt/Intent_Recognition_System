@@ -1,6 +1,0 @@
-{
-    "current": {
-        "accuracy": 57.96296296296296,
-        "model_path": "s3://public-intent-recognition-system-bucket/20260816_053546/"
-    }
-}
