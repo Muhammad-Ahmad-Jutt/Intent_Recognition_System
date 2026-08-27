@@ -1,0 +1,185 @@
+name: SageMaker Training
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ACTIONS_ROLE_ARN: ${{ vars.ACTIONS_ROLE_ARN }}
+  TRAINING_ECR_REPOSITORY_URL: ${{ vars.TRAINING_ECR_REPOSITORY_URL }}
+  S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+  SAGEMAKER_EXECUTION_ROLE_ARN: ${{ vars.SAGEMAKER_EXECUTION_ROLE_ARN }}
+  SAGEMAKER_TRAINING_INSTANCE_TYPE: ${{ vars.SAGEMAKER_TRAINING_INSTANCE_TYPE }}
+
+jobs:
+
+  build-and-train:
+    name: Build Training Image and Run SageMaker Training
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # =====================================================
+      # CHECKOUT
+      # =====================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # =====================================================
+      # AWS AUTHENTICATION
+      # =====================================================
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      # =====================================================
+      # VERIFY AWS IDENTITY
+      # =====================================================
+
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+
+      # =====================================================
+      # LOGIN TO ECR
+      # =====================================================
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password \
+            --region "$AWS_REGION" \
+            | docker login \
+              --username AWS \
+              --password-stdin "$TRAINING_ECR_REPOSITORY_URL"
+
+
+      # =====================================================
+      # BUILD TRAINING IMAGE
+      # =====================================================
+
+      - name: Build training image
+        run: |
+          docker build \
+            -f training/Dockerfile \
+            -t "$TRAINING_ECR_REPOSITORY_URL:latest" \
+            .
+
+
+      # =====================================================
+      # PUSH TRAINING IMAGE
+      # =====================================================
+
+      - name: Push training image
+        run: |
+          docker push \
+            "$TRAINING_ECR_REPOSITORY_URL:latest"
+
+
+      # =====================================================
+      # CREATE UNIQUE TRAINING JOB NAME
+      # =====================================================
+
+      - name: Set training job name
+        run: |
+          TRAINING_JOB_NAME="intent-recognition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          echo "TRAINING_JOB_NAME=$TRAINING_JOB_NAME" >> "$GITHUB_ENV"
+
+          echo "Training job:"
+          echo "$TRAINING_JOB_NAME"
+
+
+      # =====================================================
+      # START SAGEMAKER TRAINING JOB
+      # =====================================================
+
+      - name: Start SageMaker training job
+        run: |
+
+          aws sagemaker create-training-job \
+            --training-job-name "$TRAINING_JOB_NAME" \
+            --algorithm-specification \
+              TrainingImage="$TRAINING_ECR_REPOSITORY_URL:latest",TrainingInputMode=File \
+            --role-arn "$SAGEMAKER_EXECUTION_ROLE_ARN" \
+            --input-data-config \
+              "ChannelName=train,DataSource={S3DataSource={S3DataType=S3Prefix,S3Uri=s3://$S3_BUCKET_NAME/dataset/,S3DataDistributionType=FullyReplicated}}" \
+            --output-data-config \
+              "S3OutputPath=s3://$S3_BUCKET_NAME/output/" \
+            --resource-config \
+              "InstanceType=$SAGEMAKER_TRAINING_INSTANCE_TYPE,InstanceCount=1,VolumeSizeInGB=30" \
+            --stopping-condition \
+              "MaxRuntimeInSeconds=7200"
+
+
+      # =====================================================
+      # WAIT FOR TRAINING
+      # =====================================================
+
+      - name: Wait for SageMaker training job
+        run: |
+          echo "Waiting for SageMaker training job..."
+
+          aws sagemaker wait training-job-completed-or-stopped \
+            --training-job-name "$TRAINING_JOB_NAME"
+
+
+      # =====================================================
+      # GET TRAINING JOB DETAILS
+      # =====================================================
+
+      - name: Get training job details
+        run: |
+
+          aws sagemaker describe-training-job \
+            --training-job-name "$TRAINING_JOB_NAME"
+
+
+      # =====================================================
+      # VERIFY TRAINING STATUS
+      # =====================================================
+
+      - name: Verify training result
+        run: |
+
+          STATUS=$(aws sagemaker describe-training-job \
+            --training-job-name "$TRAINING_JOB_NAME" \
+            --query 'TrainingJobStatus' \
+            --output text)
+
+          echo "Training status: $STATUS"
+
+          if [ "$STATUS" != "Completed" ]; then
+            echo "Training job did not complete successfully."
+            exit 1
+          fi
+
+          echo "Training completed successfully."
+
+
+      # =====================================================
+      # GET MODEL ARTIFACT
+      # =====================================================
+
+      - name: Get model artifact
+        run: |
+
+          MODEL_ARTIFACT=$(aws sagemaker describe-training-job \
+            --training-job-name "$TRAINING_JOB_NAME" \
+            --query 'ModelArtifacts.S3ModelArtifacts' \
+            --output text)
+
+          echo "Model artifact:"
+          echo "$MODEL_ARTIFACT"
+
+          echo "MODEL_ARTIFACT=$MODEL_ARTIFACT" >> "$GITHUB_ENV"
