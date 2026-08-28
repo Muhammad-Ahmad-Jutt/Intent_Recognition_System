@@ -1,7 +1,7 @@
-transformers
-datasets
-scikit-learn
-pandas
-numpy
-evaluate
-accelerate
+transformers==5.13.0
+datasets==5.0.0
+scikit-learn==1.9.0
+pandas==3.0.3
+numpy==2.5.1
+evaluate==0.4.6
+accelerate==1.14.0

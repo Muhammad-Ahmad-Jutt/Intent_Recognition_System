@@ -5,11 +5,11 @@ WORKDIR /opt/ml/code
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-RUN python -m pip install --upgrade pip setuptools wheel
+# RUN python -m pip install --upgrade pip setuptools wheel
 
 COPY training/requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install  -r requirements.txt
 
 COPY training/train.py .
 
